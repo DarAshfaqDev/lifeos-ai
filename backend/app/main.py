@@ -36,6 +36,11 @@ def on_startup():
     Base.metadata.create_all(bind=engine)
 
 
+@app.get("/")
+def root():
+    return {"status": "online", "service": "LifeOS AI API"}
+
+
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy", "app": settings.APP_NAME, "version": settings.VERSION}
