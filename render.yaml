@@ -15,7 +15,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://lifeos-ai.vercel.app,http://localhost:3000
+        value: https://lifeos-aiproject-n13mbnbl7-dar-ishfaq-backends-projects.vercel.app,http://localhost:3000
       - key: PYTHON_VERSION
         value: 3.12.0
       # Fill these in the Render dashboard after deploy:
