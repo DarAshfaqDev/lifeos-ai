@@ -44,3 +44,10 @@ def root():
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy", "app": settings.APP_NAME, "version": settings.VERSION}
+
+@app.get("/api/debug-cors")
+def debug_cors():
+    return {
+        "cors_origins": settings.CORS_ORIGINS,
+        "cors_list": settings.cors_origins_list
+    }
