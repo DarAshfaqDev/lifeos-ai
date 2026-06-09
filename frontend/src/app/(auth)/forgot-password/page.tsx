@@ -22,11 +22,10 @@ export default function ForgotPasswordPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/forgot-password`,
         { email }
       );
+      setSent(true);
       const token = res.data?.reset_token;
       if (token) {
-        window.location.href = `/reset-password?token=${token}`;
-      } else {
-        setSent(true);
+        sessionStorage.setItem("reset_token", token);
       }
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -84,12 +83,30 @@ export default function ForgotPasswordPage() {
                 </Button>
               </form>
             ) : (
-              <p className="text-sm text-muted-foreground text-center">
-                Didn't receive the email?{" "}
-                <button onClick={() => setSent(false)} className="text-primary hover:underline font-medium">
-                  Try again
-                </button>
-              </p>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  If an account exists with this email, a reset link has been sent.
+                </p>
+                {typeof window !== "undefined" && sessionStorage.getItem("reset_token") && (
+                  <Button
+                    variant="default"
+                    className="w-full"
+                    onClick={() => {
+                      const t = sessionStorage.getItem("reset_token");
+                      sessionStorage.removeItem("reset_token");
+                      window.location.href = `/reset-password?token=${t}`;
+                    }}
+                  >
+                    Continue to reset
+                  </Button>
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  Didn't receive it?{" "}
+                  <button onClick={() => setSent(false)} className="text-primary hover:underline font-medium">
+                    Try again
+                  </button>
+                </p>
+              </div>
             )}
 
             <p className="text-center text-sm text-muted-foreground mt-6">
