@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
 
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    FRONTEND_URL: str = "http://localhost:3000"
+
     CORS_ORIGINS: str = "http://localhost:3000,https://lifeos-ai.vercel.app"
 
     @property
