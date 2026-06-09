@@ -15,7 +15,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://lifeos-aiproject-n13mbnbl7-dar-ishfaq-backends-projects.vercel.app,http://localhost:3000
+        value: https://lifeos-aiproject.vercel.app,http://localhost:3000
       - key: PYTHON_VERSION
         value: 3.12.0
       # Fill these in the Render dashboard after deploy:
@@ -35,8 +35,8 @@ services:
         sync: false
       - key: GOOGLE_REDIRECT_URI
         value: https://lifeos-ai-api.onrender.com/api/auth/google/callback
-      - key: FRONTEND_URL
-        value: https://lifeos-aiproject-n13mbnbl7-dar-ishfaq-backends-projects.vercel.app
+- key: FRONTEND_URL
+  value: https://lifeos-aiproject.vercel.app
 
 databases:
   - name: lifeos-ai-db
