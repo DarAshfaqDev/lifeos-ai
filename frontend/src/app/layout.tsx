@@ -9,7 +9,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import "./globals.css";
 
-const publicRoutes = ["/login", "/register", "/verify-email", "/auth/callback", "/"];
+const publicRoutes = ["/login", "/register", "/verify-email", "/auth/callback", "/forgot-password", "/reset-password", "/"];
 
 export default function RootLayout({
   children,

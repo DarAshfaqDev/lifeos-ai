@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, Token, RefreshTokenRequest,
-    VerifyEmailRequest,
+    VerifyEmailRequest, ForgotPasswordRequest, ResetPasswordRequest,
 )
 from app.schemas.user import UserResponse
 from app.services.auth import AuthService
@@ -46,6 +46,18 @@ def verify_email(req: VerifyEmailRequest, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=400, detail="Invalid verification token")
     return {"message": "Email verified successfully"}
+
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    service = AuthService(db)
+    return service.forgot_password(email=req.email)
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    service = AuthService(db)
+    return service.reset_password(token=req.token, new_password=req.password)
 
 
 @router.get("/me", response_model=UserResponse)

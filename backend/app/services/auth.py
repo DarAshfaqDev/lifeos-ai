@@ -97,6 +97,55 @@ class AuthService:
         self.db.commit()
         return True
 
+    def forgot_password(self, email: str) -> dict:
+        try:
+            user = self.db.query(User).filter(User.email == email).first()
+            if not user:
+                return {"message": "If an account exists with this email, a reset link has been sent"}
+
+            reset_token = create_reset_token(user.id)
+            logger.info(f"Reset token for {email}: {reset_token}")
+
+            return {"message": "If an account exists with this email, a reset link has been sent", "reset_token": reset_token}
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Forgot password failed: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to process request",
+            )
+
+    def reset_password(self, token: str, new_password: str) -> dict:
+        try:
+            payload = decode_token(token)
+            if not payload or payload.get("type") != "reset":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid or expired reset token",
+                )
+
+            user_id = int(payload["sub"])
+            user = self.db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid or expired reset token",
+                )
+
+            user.password_hash = hash_password(new_password)
+            self.db.commit()
+
+            return {"message": "Password reset successfully"}
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Reset password failed: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to reset password",
+            )
+
     def _create_verification_token(self, user: User) -> str:
         raw = f"{user.id}{user.email}{secrets.token_hex(16)}"
         return hashlib.sha256(raw.encode()).hexdigest()
