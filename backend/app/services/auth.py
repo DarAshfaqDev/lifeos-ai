@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.utils.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
@@ -6,50 +7,71 @@ from datetime import timedelta
 import secrets
 import hashlib
 
+logger = logging.getLogger(__name__)
+
 
 class AuthService:
     def __init__(self, db: Session):
         self.db = db
 
     def register(self, email: str, password: str, name: str, **kwargs) -> dict:
-        existing = self.db.query(User).filter(User.email == email).first()
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already registered",
+        try:
+            existing = self.db.query(User).filter(User.email == email).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Email already registered",
+                )
+
+            hashed = hash_password(password)
+            user = User(
+                email=email,
+                password_hash=hashed,
+                name=name,
+                **{k: v for k, v in kwargs.items() if hasattr(User, k)},
             )
+            self.db.add(user)
+            self.db.commit()
+            self.db.refresh(user)
 
-        user = User(
-            email=email,
-            password_hash=hash_password(password),
-            name=name,
-            **{k: v for k, v in kwargs.items() if hasattr(User, k)},
-        )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
+            access_token = create_access_token(user.id)
+            refresh_token = create_refresh_token(user.id)
 
-        verification_token = self._create_verification_token(user)
-        # In production: send verification email
-
-        return {
-            "user_id": user.id,
-            "access_token": create_access_token(user.id),
-            "refresh_token": create_refresh_token(user.id),
-        }
+            return {
+                "user_id": user.id,
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Registration failed: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Registration failed: {str(e)}",
+            )
 
     def login(self, email: str, password: str) -> dict:
-        user = self.db.query(User).filter(User.email == email).first()
-        if not user or not verify_password(password, user.password_hash):
+        try:
+            user = self.db.query(User).filter(User.email == email).first()
+            if not user or not verify_password(password, user.password_hash):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid email or password",
+                )
+            return {
+                "user_id": user.id,
+                "access_token": create_access_token(user.id),
+                "refresh_token": create_refresh_token(user.id),
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Login failed: {e}", exc_info=True)
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Login failed: {str(e)}",
             )
-        return {
-            "user_id": user.id,
-            "access_token": create_access_token(user.id),
-            "refresh_token": create_refresh_token(user.id),
-        }
 
     def refresh_token(self, refresh_token: str) -> dict:
         payload = decode_token(refresh_token)
