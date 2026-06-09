@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.utils.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+from app.utils.security import hash_password, verify_password, create_access_token, create_refresh_token, create_reset_token, decode_token
 from fastapi import HTTPException, status
 from datetime import timedelta
 import secrets
