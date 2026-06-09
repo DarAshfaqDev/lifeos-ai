@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    DATABASE_URL: str = "sqlite:////tmp/lifeos.db"
+    DATABASE_URL: str = "sqlite://"
 
     SECRET_KEY: str = "super-secret-key-change-in-production"
     ALGORITHM: str = "HS256"

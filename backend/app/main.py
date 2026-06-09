@@ -48,7 +48,17 @@ def health_check():
 
 @app.get("/api/debug-cors")
 def debug_cors():
+    from app.database import engine
+    import sqlalchemy
+    try:
+        with engine.connect() as conn:
+            conn.execute(sqlalchemy.text("SELECT 1"))
+            db_ok = True
+    except Exception as e:
+        db_ok = False
     return {
         "cors_origins": settings.CORS_ORIGINS,
-        "cors_list": settings.cors_origins_list
+        "cors_list": settings.cors_origins_list,
+        "database_url": settings.DATABASE_URL.replace(settings.SECRET_KEY[:4] if len(settings.SECRET_KEY) > 4 else "xxxx", "****") if "postgres" in settings.DATABASE_URL else settings.DATABASE_URL,
+        "database_ok": db_ok,
     }
