@@ -42,6 +42,40 @@ export default function AnalyticsPage() {
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" /></div>;
 
+  const completedTotal = trends.reduce((a: number, t: any) => a + (t.tasks_completed || 0), 0);
+  const scoredDays = trends.filter((t: any) => t.tasks_completed > 0);
+  const avgScore = scoredDays.length
+    ? Math.round(scoredDays.reduce((a: number, t: any) => a + t.score, 0) / scoredDays.length)
+    : 0;
+  const dayScores: Record<string, number[]> = {};
+  trends.forEach((t: any) => {
+    const day = new Date(t.date).toLocaleDateString("en-US", { weekday: "long" });
+    (dayScores[day] = dayScores[day] || []).push(t.score || 0);
+  });
+  let bestDay = null;
+  let bestAvg = -1;
+  Object.entries(dayScores).forEach(([day, scores]) => {
+    const avg = scores.reduce((a: number, b: number) => a + b, 0) / scores.length;
+    if (avg > bestAvg) {
+      bestAvg = avg;
+      bestDay = day;
+    }
+  });
+
+  const insights: string[] = [];
+  if (scoredDays.length) {
+    insights.push(`You completed ${completedTotal} task${completedTotal !== 1 ? "s" : ""} in the last 30 days (${avgScore}% average completion).`);
+  }
+  if (bestDay && bestAvg > 0) {
+    insights.push(`Your most productive day of the week is ${bestDay}.`);
+  }
+  if ((dashData?.focus_score || 0) >= 70) {
+    insights.push("Your focus score is high — keep the same pace.");
+  }
+  if (!scoredDays.length) {
+    insights.push("No completed tasks yet. Complete your first task to start seeing insights.");
+  }
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="flex items-center justify-between">
@@ -157,6 +191,25 @@ export default function AnalyticsPage() {
                 <p className="text-3xl font-bold text-orange-500">{dashData?.goal_progress || 0}%</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Brain className="h-4 w-4 text-primary" />
+              What your data says
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {insights.map((insight, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                  <span className="text-muted-foreground">{insight}</span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       </div>
