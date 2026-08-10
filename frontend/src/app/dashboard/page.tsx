@@ -260,11 +260,11 @@ export default function DashboardPage() {
             </div>
             <Button
               size="lg"
-              className="w-full gap-2"
+              className="w-full gap-2 rounded-full"
               onClick={() => router.push(`/focus?task=${nextAction.id}`)}
             >
               <Play className="h-5 w-5" />
-              Start focus session
+              Enter Focus Space
             </Button>
           </CardContent>
         </Card>
