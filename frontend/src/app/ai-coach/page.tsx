@@ -16,7 +16,7 @@ interface Message {
 export default function AICoachPage() {
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
-    content: "Hi! I'm your LifeOS AI Coach. I can help you with:\n\n• Creating personalized schedules\n• Analyzing your productivity\n• Generating interview questions\n• Building career roadmaps\n• Beating procrastination\n\nWhat would you like help with today?",
+    content: "Hi, I'm your LifeOS Coach. Tell me what you're trying to get done and I'll help you plan it, break it down, or get unstuck.\n\nTry:\n• \"What should I do today?\"\n• \"My plan is too much, make it realistic\"\n• \"Break down: build a portfolio website\"",
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,16 @@ export default function AICoachPage() {
   };
 
   const quickActions = [
-    { label: "Generate Roadmap", icon: Target, action: async () => {
+    { label: "Today's priority", icon: Target, action: async () => {
+      setMessages((prev) => [...prev, { role: "user", content: "What should I do today?" }]);
+      setLoading(true);
+      try {
+        const { data } = await aiCoachApi.chat({ message: "What should I do today?", conversation_history: [] });
+        setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+      } catch { toast.error("AI service unavailable"); }
+      setLoading(false);
+    }},
+    { label: "Roadmap", icon: Target, action: async () => {
       setLoading(true);
       try {
         const { data } = await aiCoachApi.generateRoadmap();
@@ -62,7 +71,7 @@ export default function AICoachPage() {
       } catch { toast.error("Failed to generate roadmap"); }
       setLoading(false);
     }},
-    { label: "Analyze Productivity", icon: TrendingUp, action: async () => {
+    { label: "Productivity", icon: TrendingUp, action: async () => {
       setLoading(true);
       try {
         const { data } = await aiCoachApi.analyzeProductivity();
@@ -70,7 +79,7 @@ export default function AICoachPage() {
       } catch { toast.error("Failed to analyze"); }
       setLoading(false);
     }},
-    { label: "Interview Questions", icon: Brain, action: () => {
+    { label: "Interview Qs", icon: Brain, action: () => {
       setInput("Generate 5 technical interview questions for a Data Analyst role covering SQL, Python, and statistics.");
     }},
   ];
