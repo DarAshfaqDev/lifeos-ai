@@ -8,11 +8,8 @@ import {
   Sun,
   Moon,
   LogOut,
-  User,
-  Settings,
   ChevronDown,
-  Bell,
-  Zap,
+  UserPlus,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -27,30 +24,38 @@ export function Header() {
     router.push("/login");
   };
 
+  const isGuest = user?.is_guest;
+
   return (
-    <header className="h-16 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between px-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          Welcome back,
+    <header className="h-16 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 md:px-6">
+      <div className="flex items-center gap-3 min-w-0">
+        <h2 className="text-sm font-medium text-muted-foreground truncate">
+          {isGuest ? (
+            <span className="flex items-center gap-2">
+              Exploring as Guest
+            </span>
+          ) : (
+            "Welcome back,"
+          )}
         </h2>
-        <span className="font-semibold">{user?.name || "User"}</span>
-        {user && (
-          <span className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-            <Zap className="h-3 w-3" />
-            Lvl {user.level} &middot; {user.xp_points} XP
-          </span>
-        )}
+        <span className="font-semibold truncate">{user?.name || "User"}</span>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button className="relative p-2 rounded-lg hover:bg-accent transition-colors">
-          <Bell className="h-4 w-4 text-muted-foreground" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
-        </button>
+      <div className="flex items-center gap-2 shrink-0">
+        {isGuest && (
+          <button
+            onClick={() => router.push("/guest/save")}
+            className="flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Save my progress
+          </button>
+        )}
 
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="p-2 rounded-lg hover:bg-accent transition-colors"
+          aria-label="Toggle theme"
         >
           {theme === "dark" ? (
             <Sun className="h-4 w-4 text-muted-foreground" />
@@ -63,6 +68,7 @@ export function Header() {
           <button
             onClick={() => setShowMenu(!showMenu)}
             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors"
+            aria-label="Account menu"
           >
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-sm font-medium">
               {user?.name ? getInitials(user.name) : "U"}
@@ -76,26 +82,32 @@ export function Header() {
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border bg-card shadow-lg z-20 py-1">
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border bg-card shadow-lg z-20 py-1">
                 <div className="px-3 py-2 border-b">
                   <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {isGuest ? "Guest session — data is temporary" : user?.email}
+                  </p>
                 </div>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors">
-                  <User className="h-4 w-4" />
-                  Profile
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors">
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </button>
+                {isGuest && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      router.push("/guest/save");
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-accent transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Create free account
+                  </button>
+                )}
                 <div className="border-t my-1" />
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  {isGuest ? "Leave guest mode" : "Logout"}
                 </button>
               </div>
             </>

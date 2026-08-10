@@ -7,14 +7,15 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Zap, Mail, Lock, User, Eye, EyeOff, PlayCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { register } = useAuthStore();
+  const [guestLoading, setGuestLoading] = useState(false);
+  const { register, loginAsGuest } = useAuthStore();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,12 +23,25 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(form);
-      toast.success("Account created! Let's set up your profile.");
-      router.push("/dashboard");
+      toast.success("Account created! Let's set up your goal.");
+      router.push("/onboarding");
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Registration failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGuest = async () => {
+    setGuestLoading(true);
+    try {
+      await loginAsGuest();
+      toast.success("Welcome! Explore LifeOS as a guest.");
+      router.push("/onboarding");
+    } catch {
+      toast.error("Couldn't start guest mode");
+    } finally {
+      setGuestLoading(false);
     }
   };
 
@@ -121,6 +135,32 @@ export default function RegisterPage() {
               <Link href="/login" className="text-primary hover:underline font-medium">
                 Sign in
               </Link>
+            </p>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={handleGuest}
+              disabled={guestLoading}
+            >
+              {guestLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <PlayCircle className="h-4 w-4" />
+              )}
+              Try it as a Guest
+            </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              No account needed. Your guest data is temporary and stays on this device.
             </p>
           </CardContent>
         </Card>
