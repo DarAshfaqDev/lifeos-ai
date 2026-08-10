@@ -1,5 +1,5 @@
 import axios from "axios";
-import { AuthTokens, User } from "@/types";
+import { AuthTokens, User, TodayData } from "@/types";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
@@ -58,6 +58,9 @@ export const authApi = {
   }) => api.post<AuthTokens>("/api/auth/register", data),
   login: (data: { email: string; password: string }) =>
     api.post<AuthTokens>("/api/auth/login", data),
+  guest: () => api.post<AuthTokens>("/api/auth/guest"),
+  convertGuest: (data: { name: string; email: string; password: string }) =>
+    api.post<AuthTokens>("/api/auth/convert-guest", data),
   refresh: (refresh_token: string) =>
     api.post<AuthTokens>("/api/auth/refresh", { refresh_token }),
   getMe: () => api.get<User>("/api/auth/me"),
@@ -127,6 +130,7 @@ export const financeApi = {
 
 export const analyticsApi = {
   getDashboard: () => api.get("/api/analytics/dashboard"),
+  getToday: () => api.get<TodayData>("/api/analytics/today"),
   getTrends: (days?: number) =>
     api.get("/api/analytics/productivity-trends", { params: { days } }),
   getStudyHours: (days?: number) =>
@@ -140,11 +144,23 @@ export const aiCoachApi = {
     api.post("/api/ai-coach/chat", data),
   generateRoadmap: () => api.post("/api/ai-coach/generate-roadmap"),
   analyzeProductivity: () => api.post("/api/ai-coach/analyze-productivity"),
+  breakdownTask: (data: { task_title: string; description?: string }) =>
+    api.post("/api/ai-coach/breakdown-task", data),
+  stuck: (data: { task_title: string; blocker?: string }) =>
+    api.post("/api/ai-coach/stuck", data),
   getInterviewQuestions: (data: {
     role: string;
     skills: string[];
     question_type?: string;
   }) => api.post("/api/ai-coach/interview-questions", data),
+};
+
+export const adminApi = {
+  getStats: () => api.get("/api/admin/stats"),
+  listUsers: (params?: { page?: number; per_page?: number }) =>
+    api.get("/api/admin/users", { params }),
+  toggleUserActive: (userId: number) =>
+    api.put(`/api/admin/users/${userId}/toggle-active`),
 };
 
 export default api;

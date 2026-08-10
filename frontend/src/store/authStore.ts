@@ -12,6 +12,12 @@ interface AuthState {
     password: string;
     name: string;
   }) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
+  convertGuest: (data: {
+    name: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   setUser: (user: User) => void;
@@ -32,6 +38,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   register: async (registerData) => {
     const { data } = await authApi.register(registerData);
+    localStorage.setItem("access_token", data.access_token);
+    localStorage.setItem("refresh_token", data.refresh_token);
+    const userRes = await authApi.getMe();
+    set({ user: userRes.data, isAuthenticated: true, isLoading: false });
+  },
+
+  loginAsGuest: async () => {
+    const { data } = await authApi.guest();
+    localStorage.setItem("access_token", data.access_token);
+    localStorage.setItem("refresh_token", data.refresh_token);
+    const userRes = await authApi.getMe();
+    set({ user: userRes.data, isAuthenticated: true, isLoading: false });
+  },
+
+  convertGuest: async (convertData) => {
+    const { data } = await authApi.convertGuest(convertData);
     localStorage.setItem("access_token", data.access_token);
     localStorage.setItem("refresh_token", data.refresh_token);
     const userRes = await authApi.getMe();

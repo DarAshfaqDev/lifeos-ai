@@ -15,6 +15,7 @@ export interface User {
   xp_points: number;
   level: number;
   onboarding_completed: boolean;
+  is_guest?: boolean;
   avatar_url?: string;
   created_at: string;
 }
@@ -136,4 +137,39 @@ export interface AuthTokens {
   access_token: string;
   refresh_token: string;
   token_type: string;
+}
+
+export interface TodayTaskSummary {
+  id: number;
+  title: string;
+  priority: "urgent" | "high" | "medium" | "low";
+  duration_minutes: number;
+  is_deep_work: boolean;
+  category: string;
+}
+
+export interface TodayPlan {
+  must_do: TodayTaskSummary[];
+  should_do: TodayTaskSummary[];
+  optional: TodayTaskSummary[];
+}
+
+export interface TodayData {
+  date: string;
+  greeting_name: string;
+  mission: string | null;
+  next_action: TodayTaskSummary | null;
+  plan: TodayPlan;
+  tasks_today: { total: number; completed: number; pending: number };
+  focus_score: number;
+  focus_explanation: string;
+  recovery: {
+    postponed_count: number;
+    message: string;
+    tasks: { id: number; title: string; priority: string }[];
+  } | null;
+  has_active_goals: boolean;
+  has_habits: boolean;
+  onboarding_completed: boolean;
+  is_guest: boolean;
 }
