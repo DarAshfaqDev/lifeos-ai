@@ -71,11 +71,21 @@ def update_task(
     task = db.query(Task).filter(Task.id == task_id, Task.user_id == current_user.id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(task, field, value)
-    if data.status == "done":
+    if data.status == "done" and task.status.value != "done":
         from datetime import datetime, timezone
         task.completed_at = datetime.now(timezone.utc)
+        task.postponed_count = 0
+    elif data.status is not None and data.status != "done" and task.status.value == "done":
+        task.completed_at = None
+    if (
+        data.date is not None
+        and data.date != task.date
+        and task.status.value != "done"
+        and data.status != "done"
+    ):
+        task.postponed_count = (task.postponed_count or 0) + 1
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(task, field, value)
     db.commit()
     db.refresh(task)
     return task

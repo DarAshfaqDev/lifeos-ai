@@ -176,6 +176,15 @@ export default function DashboardPage() {
         </p>
       </div>
 
+      {today?.procrastination && (
+        <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-4 flex items-start gap-3">
+          <Sparkles className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm">{today.procrastination.message}</p>
+          </div>
+        </div>
+      )}
+
       {today?.recovery && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
           <CalendarClock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
@@ -228,7 +237,27 @@ export default function DashboardPage() {
               </p>
               <Flag className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-xl font-semibold mb-4">{nextAction.title}</p>
+            <p className="text-xl font-semibold mb-1">{nextAction.title}</p>
+            {nextAction.reason && (
+              <p className="text-sm text-muted-foreground mb-1">
+                {nextAction.reason}
+              </p>
+            )}
+            {nextAction.scaled_suggestion && (
+              <p className="text-sm text-amber-600 mb-3">
+                {nextAction.scaled_suggestion}
+              </p>
+            )}
+            <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5">
+                ~{nextAction.duration_minutes}m
+              </span>
+              {today?.focus_stats && (
+                <span className="inline-flex items-center gap-1">
+                  {today.focus_stats.today_minutes}m focused today
+                </span>
+              )}
+            </div>
             <Button
               size="lg"
               className="w-full gap-2"

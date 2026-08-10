@@ -14,6 +14,7 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
   const [state, setState] = useState<TimerState>("idle");
   const [timeLeft, setTimeLeft] = useState(initialFocus);
   const [sessions, setSessions] = useState(0);
+  const [focusElapsed, setFocusElapsed] = useState(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -45,8 +46,12 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
         setState("idle");
         if (mode === "focus") {
           setSessions((s) => s + 1);
+          setFocusElapsed((e) => e + 1);
         }
         return durations.current[mode === "focus" ? "break" : "focus"];
+      }
+      if (mode === "focus") {
+        setFocusElapsed((e) => e + 1);
       }
       return prev - 1;
     });
@@ -72,6 +77,7 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
     clearTimer();
     setState("idle");
     setTimeLeft(durations.current[mode]);
+    setFocusElapsed(0);
   }, [clearTimer, mode]);
 
   const switchMode = useCallback((newMode: TimerMode) => {
@@ -111,6 +117,7 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
     display,
     progress,
     sessions,
+    focusElapsed,
     start,
     pause,
     resume,

@@ -163,4 +163,16 @@ export const adminApi = {
     api.put(`/api/admin/users/${userId}/toggle-active`),
 };
 
+export const focusApi = {
+  record: (data: {
+    task_id?: number;
+    planned_minutes: number;
+    actual_minutes: number;
+    completed: boolean;
+  }) => api.post("/api/focus/sessions", data),
+  list: (limit?: number) =>
+    api.get("/api/focus/sessions", { params: { limit } }),
+  stats: () => api.get("/api/focus/stats"),
+};
+
 export default api;

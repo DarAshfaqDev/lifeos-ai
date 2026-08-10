@@ -38,6 +38,7 @@ class Task(Base):
     recurring_pattern = Column(String(100), nullable=True)
     sort_order = Column(Integer, default=0)
     tags = Column(String(500), nullable=True)
+    postponed_count = Column(Integer, default=0)
 
     user = relationship("User", backref="tasks")
     time_blocks = relationship("TimeBlock", back_populates="task", cascade="all, delete-orphan")

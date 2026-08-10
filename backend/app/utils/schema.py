@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 # Kept idempotent so startup never fails on existing data.
 _ADD_COLUMN_STATEMENTS = [
     ("users", "is_guest", "BOOLEAN DEFAULT 0"),
+    ("tasks", "postponed_count", "INTEGER DEFAULT 0"),
 ]
 
 

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 from app.utils.schema import ensure_schema
-from app.routers import auth, users, tasks, goals, habits, learning, analytics, ai_coach, admin, finance, google_auth
+from app.routers import auth, users, tasks, goals, habits, learning, analytics, ai_coach, admin, finance, google_auth, focus
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -31,6 +31,7 @@ app.include_router(ai_coach.router)
 app.include_router(admin.router)
 app.include_router(finance.router)
 app.include_router(google_auth.router)
+app.include_router(focus.router)
 
 
 @app.on_event("startup")

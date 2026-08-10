@@ -9,6 +9,7 @@ from app.models.task import Task, TaskStatus
 from app.models.habit import Habit, HabitLog
 from app.models.learning import Skill
 from app.models.goal import Goal
+from app.models.focus import FocusSession
 from app.utils.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
@@ -125,7 +126,6 @@ def get_today(
         reverse=True,
     )
     completed_today = sum(1 for t in tasks_today if t.status.value == "done")
-
     postponed = (
         db.query(Task)
         .filter(
@@ -157,9 +157,29 @@ def get_today(
         20
     ))
 
+    focus_sessions_today = (
+        db.query(FocusSession)
+        .filter(FocusSession.user_id == current_user.id, FocusSession.date == today)
+        .all()
+    )
+    focus_minutes_today = sum(s.actual_minutes or 0 for s in focus_sessions_today)
+
+    budget_hours = current_user.daily_study_hours or 2.0
+    available_minutes = max(15, int(budget_hours * 60) - focus_minutes_today)
+
     next_action = None
+    fits_available = False
     if pending:
-        next_action = pending[0]
+        candidates = [
+            t for t in pending
+            if (t.duration_minutes or 25) <= available_minutes
+        ]
+        if candidates:
+            next_action = candidates[0]
+            fits_available = True
+        else:
+            smallest = min(pending, key=lambda t: (t.duration_minutes or 25))
+            next_action = smallest
 
     mission = None
     if next_action:
@@ -190,11 +210,48 @@ def get_today(
             ],
         }
 
+    procrastination = None
+    repeated = [
+        t for t in postponed if (t.postponed_count or 0) >= 2
+    ]
+    if repeated:
+        worst = repeated[0]
+        procrastination = {
+            "task_id": worst.id,
+            "task_title": worst.title,
+            "postponed_count": worst.postponed_count,
+            "message": (
+                f"You've postponed \"{worst.title}\" {worst.postponed_count} times. "
+                "The problem may be the task size, not your motivation. "
+                "Try a 10-minute version to get unstuck."
+            ),
+        }
+
+    next_action_summary = _task_summary(next_action)
+    if next_action_summary and next_action:
+        reason_parts = []
+        if next_action.priority.value in ("urgent", "high"):
+            reason_parts.append("highest-priority task")
+        else:
+            reason_parts.append("next planned task")
+        if next_action.id == (procrastination or {}).get("task_id"):
+            reason_parts.append("it keeps getting postponed — start small")
+        elif fits_available:
+            reason_parts.append(
+                f"fits your available time (~{available_minutes} min left today)"
+            )
+        next_action_summary["reason"] = "Recommended: " + " · ".join(reason_parts) + "."
+        if not fits_available:
+            next_action_summary["scaled_suggestion"] = (
+                f"Too long for your remaining ~{available_minutes} min. Do a 10-15 minute "
+                "starting version and stop there."
+            )
+
     return {
         "date": today.isoformat(),
         "greeting_name": current_user.name or "there",
         "mission": mission,
-        "next_action": _task_summary(next_action),
+        "next_action": next_action_summary,
         "plan": plan,
         "tasks_today": {
             "total": len(tasks_today),
@@ -203,6 +260,11 @@ def get_today(
         },
         "focus_score": focus_score,
         "focus_explanation": _focus_explanation(focus_score),
+        "focus_stats": {
+            "today_minutes": focus_minutes_today,
+            "available_minutes": available_minutes,
+        },
+        "procrastination": procrastination,
         "recovery": recovery,
         "has_active_goals": len(active_goals) > 0,
         "has_habits": len(habits) > 0,
@@ -221,6 +283,7 @@ def _task_summary(task: Optional[Task]) -> Optional[Dict[str, Any]]:
         "duration_minutes": task.duration_minutes,
         "is_deep_work": task.is_deep_work,
         "category": task.category,
+        "postponed_count": task.postponed_count or 0,
     }
 
 

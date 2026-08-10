@@ -146,6 +146,21 @@ export interface TodayTaskSummary {
   duration_minutes: number;
   is_deep_work: boolean;
   category: string;
+  postponed_count?: number;
+  reason?: string;
+  scaled_suggestion?: string;
+}
+
+export interface FocusStats {
+  today_minutes: number;
+  available_minutes: number;
+}
+
+export interface ProcrastinationAlert {
+  task_id: number;
+  task_title: string;
+  postponed_count: number;
+  message: string;
 }
 
 export interface TodayPlan {
@@ -163,6 +178,8 @@ export interface TodayData {
   tasks_today: { total: number; completed: number; pending: number };
   focus_score: number;
   focus_explanation: string;
+  focus_stats: FocusStats;
+  procrastination: ProcrastinationAlert | null;
   recovery: {
     postponed_count: number;
     message: string;
@@ -172,4 +189,23 @@ export interface TodayData {
   has_habits: boolean;
   onboarding_completed: boolean;
   is_guest: boolean;
+}
+
+export interface FocusSession {
+  id: number;
+  task_id?: number;
+  planned_minutes: number;
+  actual_minutes: number;
+  completed: boolean;
+  started_at: string;
+  ended_at?: string;
+  date: string;
+}
+
+export interface FocusStatsSummary {
+  today_minutes: number;
+  week_minutes: number;
+  sessions_today: number;
+  sessions_week: number;
+  avg_session_minutes: number;
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { tasksApi, analyticsApi, aiCoachApi } from "@/lib/api";
+import { tasksApi, analyticsApi, aiCoachApi, focusApi } from "@/lib/api";
 import { Task, TodayData } from "@/types";
 import { useTimer } from "@/hooks/useTimer";
 import {
@@ -49,6 +49,7 @@ export default function FocusPage() {
     progress,
     state,
     sessions,
+    focusElapsed,
     start,
     pause,
     resume,
@@ -93,9 +94,32 @@ export default function FocusPage() {
     [reset]
   );
 
+  const prevSessions = useRef(0);
+  useEffect(() => {
+    if (sessions > prevSessions.current && selectedTask) {
+      prevSessions.current = sessions;
+      const actual = Math.min(focusElapsed, selectedTask.duration_minutes || 25);
+      focusApi
+        .record({
+          task_id: selectedTask.id,
+          planned_minutes: selectedTask.duration_minutes || 25,
+          actual_minutes: Math.max(1, Math.round(actual)),
+          completed: true,
+        })
+        .catch(() => {});
+    }
+  }, [sessions, selectedTask, focusElapsed]);
+
   const finishSession = async () => {
     if (!selectedTask) return;
     try {
+      const actual = Math.min(focusElapsed, selectedTask.duration_minutes || 25);
+      await focusApi.record({
+        task_id: selectedTask.id,
+        planned_minutes: selectedTask.duration_minutes || 25,
+        actual_minutes: Math.max(1, Math.round(actual)),
+        completed: true,
+      });
       await tasksApi.update(selectedTask.id, { status: "done" });
       toast.success("Task completed. Nice work.");
       router.push("/dashboard");
