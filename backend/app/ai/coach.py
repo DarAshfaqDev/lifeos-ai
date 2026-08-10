@@ -2,22 +2,19 @@ from typing import List, Dict, Any, Optional
 from app.ai.provider import ai_provider
 
 
-SYSTEM_PROMPT = """You are LifeOS AI Coach, a world-class time management, productivity, and career planning expert. 
-You help users build their Personal Operating System. Your responses are:
-- Practical and actionable
-- Based on proven productivity methods (Pomodoro, Deep Work, Time Blocking, Eisenhower Matrix)
-- Empathetic but direct
-- Focused on the user's specific situation
+SYSTEM_PROMPT = """You are LifeOS AI Coach, a practical personal execution coach.
 
-You analyze user data and provide personalized recommendations for:
-1. Daily schedules and time blocking
-2. Learning plans and skill development
-3. Career roadmaps and job preparation
-4. Habit formation and anti-procrastination
-5. Life goal planning and financial tracking
-6. Burnout prevention and work-life balance
+Your job is NOT to entertain or produce essays. Your job is to help the user do meaningful work.
 
-Keep responses structured, concise, and motivational."""
+Rules:
+- Be concise. Under ~200 words unless the user asks for detail.
+- Always end with ONE clear next action the user can do right now.
+- When asked "what should I do today", return a short prioritized list (max 3 items) with time estimates, then ONE "start here" recommendation.
+- If a plan sounds too ambitious (many tasks, huge hours, many habits at once), say so plainly and suggest a smaller realistic plan.
+- Never use shame or guilt. If the user missed a day, help them recover: smaller task, realistic reschedule, or remove it.
+- Convert vague goals into concrete micro-actions. "Study Python" → "Open your notes and complete one exercise."
+- Use the user's real data when given. If you don't have enough data, say so instead of guessing."""
+
 
 
 def generate_roadmap(user_data: Dict[str, Any]) -> Optional[str]:
@@ -78,9 +75,53 @@ Generate 5 questions."""},
     return ai_provider.chat(messages, model="auto")
 
 
-def chat_with_coach(user_message: str, conversation_history: List[Dict] = None) -> Optional[str]:
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+def chat_with_coach(user_message: str, conversation_history: List[Dict] = None, user_context: Dict[str, Any] = None) -> Optional[str]:
+    system = SYSTEM_PROMPT
+    if user_context:
+        context_lines = ["Here is the user's current context:"]
+        if user_context.get("name"):
+            context_lines.append(f"- Name: {user_context['name']}")
+        if user_context.get("career_goal"):
+            context_lines.append(f"- Career goal: {user_context['career_goal']}")
+        if user_context.get("today_tasks"):
+            context_lines.append(f"- Today's tasks: {', '.join(user_context['today_tasks'])}")
+        if user_context.get("top_goal"):
+            context_lines.append(f"- Top goal: {user_context['top_goal']}")
+        if user_context.get("focus_score") is not None:
+            context_lines.append(f"- Today's focus score: {user_context['focus_score']}/100")
+        if user_context.get("postponed_count") is not None and user_context["postponed_count"] > 0:
+            context_lines.append(f"- Unfinished tasks from previous days: {user_context['postponed_count']}")
+        if user_context.get("recent_completed"):
+            context_lines.append(f"- Recently completed: {', '.join(user_context['recent_completed'][-5:])}")
+        system = SYSTEM_PROMPT + "\n\n" + "\n".join(context_lines)
+
+    messages = [{"role": "system", "content": system}]
     if conversation_history:
         messages.extend(conversation_history[-10:])
     messages.append({"role": "user", "content": user_message})
+    return ai_provider.chat(messages, model="auto")
+
+
+def breakdown_task(task_title: str, description: str = "") -> Optional[str]:
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"""Break this task into small, independently actionable steps.
+
+Task: {task_title}
+{('Details: ' + description) if description else ''}
+
+Return a numbered list of 3-8 concrete micro-actions. Each step must be something the user can do in one sitting without help. Keep each step to under 12 words. No extra commentary, no preamble."""},
+    ]
+    return ai_provider.chat(messages, model="auto")
+
+
+def im_stuck(task_title: str, blocker: str = "") -> Optional[str]:
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"""The user is stuck on this task: "{task_title}".
+{('They say: ' + blocker) if blocker else ''}
+
+Decide what they need: an explanation, a smaller step, an example, a resource, a schedule adjustment, or motivation.
+Then give them exactly ONE practical next step they can take in the next 5 minutes. Keep it under 120 words."""},
+    ]
     return ai_provider.chat(messages, model="auto")
