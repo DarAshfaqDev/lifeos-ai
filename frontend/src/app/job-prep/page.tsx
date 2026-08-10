@@ -67,28 +67,6 @@ export default function JobPrepPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: "Applications", value: "0", icon: Briefcase, color: "text-blue-500" },
-          { label: "Interviews", value: "0", icon: MessageSquare, color: "text-green-500" },
-          { label: "Resume Score", value: resumeFile ? "Uploaded" : "—", icon: FileText, color: "text-purple-500" },
-          { label: "Prep Score", value: "0%", icon: CheckCircle2, color: "text-orange-500" },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <Card key={item.label}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <Icon className={`h-5 w-5 ${item.color}`} />
-                <div>
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className="text-lg font-bold">{item.value}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Resume Tracker</CardTitle>

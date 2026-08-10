@@ -73,7 +73,7 @@ class AIProvider:
 
     def _chat_gemini(self, messages: List[Dict[str, str]]) -> Optional[str]:
         try:
-            model = self.gemini_client.GenerativeModel("gemini-2.5-flash")
+            model = self.gemini_client.GenerativeModel("gemini-3.5-flash")
             prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
             response = model.generate_content(prompt)
             return response.text
