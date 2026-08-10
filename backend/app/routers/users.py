@@ -4,6 +4,8 @@ from app.database import get_db
 from app.schemas.user import UserResponse, UserUpdate, OnboardingData
 from app.utils.dependencies import get_current_user
 from app.models.user import User
+from app.models.goal import Goal
+from app.models.task import Task
 from app.ai.coach import generate_roadmap
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
@@ -33,9 +35,42 @@ def complete_onboarding(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    for field, value in data.model_dump().items():
-        setattr(current_user, field, value)
+    for field, value in data.model_dump(exclude_unset=True).items():
+        if value is not None:
+            setattr(current_user, field, value)
     current_user.onboarding_completed = True
+
+    created_goal = None
+    created_task = None
+
+    top_goal_title = data.career_goal or (data.life_goals or [None])[0]
+    if top_goal_title:
+        existing_goals = db.query(Goal).filter(Goal.user_id == current_user.id).all()
+        if not existing_goals:
+            created_goal = Goal(
+                user_id=current_user.id,
+                title=top_goal_title,
+                category="career" if data.career_goal else "life",
+                priority=1,
+                is_high_priority=True,
+            )
+            db.add(created_goal)
+            db.flush()
+
+    if created_goal is not None and not db.query(Task).filter(Task.user_id == current_user.id).first():
+        from datetime import date, timedelta
+        study_minutes = max(15, int((data.daily_study_hours or 2.0) * 60))
+        created_task = Task(
+            user_id=current_user.id,
+            title=f"Start: {top_goal_title}",
+            category="general",
+            date=date.today() + timedelta(days=0),
+            priority="high",
+            duration_minutes=study_minutes,
+            is_deep_work=True,
+        )
+        db.add(created_task)
+
     db.commit()
     db.refresh(current_user)
 
@@ -59,4 +94,6 @@ def complete_onboarding(
     return {
         "message": "Onboarding completed successfully",
         "roadmap": roadmap,
+        "created_goal": created_goal.title if created_goal else None,
+        "created_task": created_task.title if created_task else None,
     }

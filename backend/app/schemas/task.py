@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime, date, time
+from datetime import datetime, time
+import datetime as _dt
+
+date_type = _dt.date
 
 
 class TaskCreate(BaseModel):
@@ -8,7 +11,7 @@ class TaskCreate(BaseModel):
     description: Optional[str] = None
     priority: str = "medium"
     category: str = "general"
-    date: Optional[date] = None
+    date: Optional[date_type] = None
     start_time: Optional[time] = None
     end_time: Optional[time] = None
     duration_minutes: int = 25
@@ -19,17 +22,17 @@ class TaskCreate(BaseModel):
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    status: Optional[str]
-    priority: Optional[str]
-    category: Optional[str]
-    date: Optional[date]
-    start_time: Optional[time]
-    end_time: Optional[time]
-    duration_minutes: Optional[int]
-    is_deep_work: Optional[bool]
-    sort_order: Optional[int]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    category: Optional[str] = None
+    date: Optional[date_type] = None
+    start_time: Optional[time] = None
+    end_time: Optional[time] = None
+    duration_minutes: Optional[int] = None
+    is_deep_work: Optional[bool] = None
+    sort_order: Optional[int] = None
 
 
 class TaskResponse(BaseModel):
@@ -39,7 +42,7 @@ class TaskResponse(BaseModel):
     status: str
     priority: str
     category: str
-    date: Optional[date]
+    date: Optional[date_type]
     start_time: Optional[time]
     end_time: Optional[time]
     duration_minutes: int
