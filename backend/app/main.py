@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
+from app.utils.schema import ensure_schema
 from app.routers import auth, users, tasks, goals, habits, learning, analytics, ai_coach, admin, finance, google_auth
 
 app = FastAPI(
@@ -35,6 +36,7 @@ app.include_router(google_auth.router)
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    ensure_schema(engine)
 
 
 @app.get("/")

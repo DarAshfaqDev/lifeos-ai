@@ -5,16 +5,16 @@ from app.models.user import User
 
 
 class OnboardingData(BaseModel):
-    age: int
-    education: str
-    occupation: str
-    career_goal: str
-    skills_learning: List[str]
-    daily_study_hours: float
-    sleep_schedule: Dict[str, str]
-    biggest_distractions: List[str]
-    monthly_income: float
-    life_goals: List[str]
+    age: Optional[int] = None
+    education: Optional[str] = None
+    occupation: Optional[str] = None
+    career_goal: Optional[str] = None
+    skills_learning: List[str] = []
+    daily_study_hours: float = 2.0
+    sleep_schedule: Dict[str, str] = {"bed": "22:00", "wake": "06:00"}
+    biggest_distractions: List[str] = []
+    monthly_income: float = 0.0
+    life_goals: List[str] = []
 
 
 class UserResponse(BaseModel):
@@ -34,6 +34,7 @@ class UserResponse(BaseModel):
     xp_points: int
     level: int
     onboarding_completed: bool
+    is_guest: bool = False
     avatar_url: Optional[str]
     created_at: datetime
 

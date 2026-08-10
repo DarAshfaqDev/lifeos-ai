@@ -4,6 +4,7 @@ from app.database import get_db
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, Token, RefreshTokenRequest,
     VerifyEmailRequest, ForgotPasswordRequest, ResetPasswordRequest,
+    ConvertGuestRequest,
 )
 from app.schemas.user import UserResponse
 from app.services.auth import AuthService
@@ -24,6 +25,27 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         education=req.education,
         occupation=req.occupation,
         career_goal=req.career_goal,
+    )
+
+
+@router.post("/guest", response_model=Token)
+def guest_session(db: Session = Depends(get_db)):
+    service = AuthService(db)
+    return service.create_guest()
+
+
+@router.post("/convert-guest", response_model=Token)
+def convert_guest(
+    req: ConvertGuestRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = AuthService(db)
+    return service.convert_guest(
+        user=current_user,
+        name=req.name,
+        email=req.email,
+        password=req.password,
     )
 
 

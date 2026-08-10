@@ -48,3 +48,9 @@ class GoogleLoginRequest(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
+
+class ConvertGuestRequest(BaseModel):
+    name: str
+    email: str
+    password: str = Field(min_length=8)

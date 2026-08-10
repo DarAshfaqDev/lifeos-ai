@@ -29,6 +29,7 @@ class User(Base):
     onboarding_completed = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+    is_guest = Column(Boolean, default=False)
 
     google_id = Column(String(255), unique=True, nullable=True)
     avatar_url = Column(String(500), nullable=True)
