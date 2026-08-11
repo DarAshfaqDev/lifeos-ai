@@ -298,7 +298,7 @@ export default function TimeManagementPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Today's Tasks</CardTitle>
+              <CardTitle className="text-base">Today&apos;s Tasks</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">

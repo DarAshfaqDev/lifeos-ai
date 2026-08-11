@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                   </Button>
                 )}
                 <p className="text-sm text-muted-foreground text-center">
-                  Didn't receive it?{" "}
+                  Didn&apos;t receive it?{" "}
                   <button onClick={() => setSent(false)} className="text-primary hover:underline font-medium">
                     Try again
                   </button>
