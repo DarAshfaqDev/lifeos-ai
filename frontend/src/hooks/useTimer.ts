@@ -4,17 +4,24 @@ import { useState, useRef, useCallback, useEffect } from "react";
 
 export type TimerMode = "focus" | "break";
 export type TimerState = "idle" | "running" | "paused";
+export type TimerType = "countdown" | "countup" | "open";
 
 const SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/f3+Af39/gIB/f39/gH9/f4CAf39/f4B/f3+AgH9/f3+Af39/gIB/f39/gH9/f4CAf39/f4B/f3+AgICA";
 const FOCUS_DEFAULT = 25 * 60;
 const BREAK_DEFAULT = 5 * 60;
 
-export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFAULT) {
+export function useTimer(
+  initialFocus = FOCUS_DEFAULT,
+  initialBreak = BREAK_DEFAULT,
+  timerType: TimerType = "countdown"
+) {
   const [mode, setMode] = useState<TimerMode>("focus");
   const [state, setState] = useState<TimerState>("idle");
   const [timeLeft, setTimeLeft] = useState(initialFocus);
   const [sessions, setSessions] = useState(0);
   const [focusElapsed, setFocusElapsed] = useState(0);
+  const [type, setType] = useState<TimerType>(timerType);
+  const typeRef = useRef<TimerType>(timerType);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -39,6 +46,13 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
   }, []);
 
   const tick = useCallback(() => {
+    if (mode === "focus") {
+      setFocusElapsed((e) => e + 1);
+    }
+
+    // Count-up / open timers never auto-complete; they only track elapsed time.
+    if (typeRef.current !== "countdown") return;
+
     setTimeLeft((prev) => {
       if (prev <= 1) {
         clearTimer();
@@ -46,12 +60,8 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
         setState("idle");
         if (mode === "focus") {
           setSessions((s) => s + 1);
-          setFocusElapsed((e) => e + 1);
         }
         return durations.current[mode === "focus" ? "break" : "focus"];
-      }
-      if (mode === "focus") {
-        setFocusElapsed((e) => e + 1);
       }
       return prev - 1;
     });
@@ -80,6 +90,15 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
     setFocusElapsed(0);
   }, [clearTimer, mode]);
 
+  const restore = useCallback((elapsedSeconds: number) => {
+    clearTimer();
+    setState("running");
+    setFocusElapsed(elapsedSeconds);
+    const planned = durations.current.focus;
+    setTimeLeft(Math.max(1, planned - elapsedSeconds));
+    intervalRef.current = setInterval(tick, 1000);
+  }, [clearTimer, tick]);
+
   const switchMode = useCallback((newMode: TimerMode) => {
     clearTimer();
     setState("idle");
@@ -98,17 +117,41 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
     }
   }, [mode, state]);
 
+  const setTimerType = useCallback((t: TimerType) => {
+    typeRef.current = t;
+    setType(t);
+    setState("idle");
+    clearTimer();
+    setTimeLeft(durations.current[mode]);
+    setFocusElapsed(0);
+  }, [clearTimer, mode]);
+
   useEffect(() => {
     return clearTimer;
   }, [clearTimer]);
 
-  const progress = mode === "focus"
-    ? 1 - timeLeft / durations.current.focus
-    : 1 - timeLeft / durations.current.break;
+  const plannedSeconds = durations.current.focus;
+
+  const progress =
+    type === "countdown"
+      ? mode === "focus"
+        ? 1 - timeLeft / plannedSeconds
+        : 1 - timeLeft / durations.current.break
+      : Math.min(1, focusElapsed / plannedSeconds);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const display = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+  const fmt = (total: number) => {
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const display =
+    type === "countdown"
+      ? fmt(timeLeft)
+      : fmt(focusElapsed);
 
   return {
     mode,
@@ -122,8 +165,10 @@ export function useTimer(initialFocus = FOCUS_DEFAULT, initialBreak = BREAK_DEFA
     pause,
     resume,
     reset,
+    restore,
     switchMode,
     addMinutes,
     setDuration,
+    setTimerType,
   };
 }

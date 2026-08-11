@@ -22,6 +22,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { loadFocusPrefs } from "@/lib/focusPrefs";
+import { SOUNDSCAPES } from "@/lib/soundscapes";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -72,6 +74,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showQuickTask, setShowQuickTask] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [focusSetupHint, setFocusSetupHint] = useState<string | null>(null);
   const [taskForm, setTaskForm] = useState({
     title: "",
     priority: "high",
@@ -97,6 +100,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadData();
+    try {
+      const prefs = loadFocusPrefs();
+      const s = SOUNDSCAPES.find((x) => x.id === prefs.sound);
+      setFocusSetupHint(
+        `Your usual setup is ready: ${prefs.durationMinutes} min · ${s?.label || "Silence"}`
+      );
+    } catch {}
   }, []);
 
   const toggleTask = async (task: Task) => {
@@ -261,11 +271,16 @@ export default function DashboardPage() {
             <Button
               size="lg"
               className="w-full gap-2 rounded-full"
-              onClick={() => router.push(`/focus?task=${nextAction.id}`)}
+              onClick={() => router.push(`/focus?task=${nextAction.id}&start=1`)}
             >
               <Play className="h-5 w-5" />
               Enter Focus Space
             </Button>
+            {focusSetupHint && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                {focusSetupHint}
+              </p>
+            )}
           </CardContent>
         </Card>
       )}

@@ -120,6 +120,14 @@ class SoundscapeEngine {
   private fade = true;
   private fading = false;
 
+  isRunning(): boolean {
+    return this.current !== "none" && !this.fading;
+  }
+
+  get activeSound(): SoundscapeId {
+    return this.current;
+  }
+
   ensureContext(): AudioContext | null {
     if (typeof window === "undefined") return null;
     if (!this.ctx) {
